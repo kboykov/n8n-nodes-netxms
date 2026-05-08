@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" fill="none">
+  <!-- Background -->
+  <circle cx="30" cy="30" r="29" fill="#1B4F8A"/>
+  <!-- Hub node -->
+  <circle cx="30" cy="30" r="6" fill="#FFFFFF"/>
+  <!-- Satellite nodes -->
+  <circle cx="30" cy="8"  r="4" fill="#5CB8FF"/>
+  <circle cx="52" cy="42" r="4" fill="#5CB8FF"/>
+  <circle cx="8"  cy="42" r="4" fill="#5CB8FF"/>
+  <!-- Connections from hub to satellite nodes -->
+  <line x1="30" y1="24" x2="30" y2="12"  stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="35" y1="34" x2="48" y2="39"  stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="25" y1="34" x2="12" y2="39"  stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round"/>
+  <!-- Status pulse ring on hub -->
+  <circle cx="30" cy="30" r="10" stroke="#5CB8FF" stroke-width="1.5" stroke-dasharray="4 3" fill="none" opacity="0.7"/>
+</svg>
