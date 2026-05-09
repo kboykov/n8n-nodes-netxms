@@ -9,16 +9,15 @@
     "monitoring"
   ],
   "license": "MIT",
-  "homepage": "https://netxms.org",
+  "homepage": "https://github.com/kboykov/n8n-netxms-node",
   "author": {
-    "name": "NetXMS Node",
-    "email": ""
+    "name": "kboykov",
+    "email": "office@endormo.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/example/n8n-nodes-netxms"
+    "url": "https://github.com/kboykov/n8n-netxms-node"
   },
-  "main": "index.js",
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
