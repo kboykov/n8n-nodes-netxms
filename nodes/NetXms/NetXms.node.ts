@@ -1,10 +1,7 @@
 import type {
-	ICredentialTestFunctions,
-	ICredentialsDecrypted,
 	IDataObject,
 	IExecuteFunctions,
 	IHttpRequestMethods,
-	INodeCredentialTestResult,
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
@@ -142,50 +139,6 @@ export class NetXms implements INodeType {
 			...serverFields,
 			...userFields,
 		],
-	};
-
-	// Placed after description per n8n convention
-	methods = {
-		credentialTest: {
-			async testNetXmsCredentials(
-				this: ICredentialTestFunctions,
-				credential: ICredentialsDecrypted,
-			): Promise<INodeCredentialTestResult> {
-				const { serverUrl, username, password } = credential.data as unknown as NetXmsCredentials;
-
-				if (!serverUrl) {
-					return { status: 'Error', message: 'Server URL is required' };
-				}
-
-				try {
-					const response = await this.helpers.request({
-						method: 'POST',
-						url: `${serverUrl.replace(/\/$/, '')}/v1/login`,
-						body: JSON.stringify({ username, password }),
-						headers: {
-							'Content-Type': 'application/json',
-							Accept: 'application/json',
-						},
-						resolveWithFullResponse: true,
-						simple: false,
-					});
-
-					const statusCode = response.statusCode as number;
-					if (statusCode === 201) {
-						return { status: 'OK', message: 'Authentication successful' };
-					}
-					if (statusCode === 401 || statusCode === 403) {
-						return { status: 'Error', message: 'Invalid username or password' };
-					}
-					return { status: 'Error', message: `Unexpected response status: ${statusCode}` };
-				} catch (error) {
-					return {
-						status: 'Error',
-						message: `Connection failed: ${(error as Error).message}`,
-					};
-				}
-			},
-		},
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {

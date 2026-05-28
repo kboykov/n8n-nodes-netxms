@@ -1,4 +1,4 @@
-import type { ICredentialType, INodeProperties } from 'n8n-workflow';
+import type { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class NetXmsApi implements ICredentialType {
 	name = 'netXmsApi';
@@ -6,9 +6,6 @@ export class NetXmsApi implements ICredentialType {
 	displayName = 'NetXMS API';
 
 	documentationUrl = 'https://netxms.org/documentation/';
-
-	// References the credentialTest method defined in NetXms.node.ts
-	testedBy = 'testNetXmsCredentials';
 
 	properties: INodeProperties[] = [
 		{
@@ -35,4 +32,19 @@ export class NetXmsApi implements ICredentialType {
 			default: '',
 		},
 	];
+
+	test: ICredentialTestRequest = {
+		request: {
+			method: 'POST',
+			baseURL: '={{$credentials.serverUrl}}',
+			url: '/v1/login',
+			body: {
+				login: '={{$credentials.username}}',
+				password: '={{$credentials.password}}',
+			},
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		},
+	};
 }
