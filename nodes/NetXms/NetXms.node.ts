@@ -1,4 +1,6 @@
 import type {
+	ICredentialDataDecryptedObject,
+	ICredentialsDecrypted,
 	IDataObject,
 	IExecuteFunctions,
 	IHttpRequestMethods,
@@ -31,6 +33,11 @@ interface NetXmsCredentials {
 	serverUrl: string;
 	username: string;
 	password: string;
+}
+
+interface NetXmsAuthenticatedCredentials
+	extends NetXmsCredentials, ICredentialDataDecryptedObject {
+	sessionToken: string;
 }
 
 export class NetXms implements INodeType {
@@ -148,26 +155,40 @@ export class NetXms implements INodeType {
 		const credentials = (await this.getCredentials('netXmsApi')) as NetXmsCredentials;
 		const serverUrl = credentials.serverUrl.replace(/\/$/, '');
 
-		// Obtain one session token for the entire execution — avoids per-item logins
-		let token: string;
-		try {
-			const loginResponse = await this.helpers.httpRequest({
-				method: 'POST',
-				url: `${serverUrl}/v1/login`,
-				body: { username: credentials.username, password: credentials.password },
-				headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-				json: true,
-			});
-			token = loginResponse.token as string;
-			if (!token) {
-				throw new Error('Login response did not contain a token');
+		const getSessionToken = async (): Promise<string> => {
+			try {
+				const loginResponse = await this.helpers.httpRequest({
+					method: 'POST',
+					url: `${serverUrl}/v1/login`,
+					body: { username: credentials.username, password: credentials.password },
+					headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+					json: true,
+				});
+				const sessionToken = loginResponse.token as string;
+				if (!sessionToken) {
+					throw new Error('Login response did not contain a token');
+				}
+
+				return sessionToken;
+			} catch (error) {
+				throw new NodeOperationError(
+					this.getNode(),
+					`Authentication failed: ${(error as Error).message}`,
+				);
 			}
-		} catch (error) {
-			throw new NodeOperationError(
-				this.getNode(),
-				`Authentication failed: ${(error as Error).message}`,
-			);
-		}
+		};
+
+		const credentialData: NetXmsAuthenticatedCredentials = {
+			...credentials,
+			sessionToken: await getSessionToken(),
+		};
+
+		const authenticatedCredentials: ICredentialsDecrypted<NetXmsAuthenticatedCredentials> = {
+			id: '',
+			name: 'NetXMS API',
+			type: 'netXmsApi',
+			data: credentialData,
+		};
 
 		// Typed helper — avoids null assertions and repetitive headers
 		const makeRequest = async (
@@ -177,18 +198,22 @@ export class NetXms implements INodeType {
 			qs?: IDataObject,
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		): Promise<any> => {
-			return this.helpers.httpRequest({
-				method,
-				url: `${serverUrl}${path}`,
-				headers: {
-					Authorization: `Bearer ${token}`,
-					Accept: 'application/json',
-					'Content-Type': 'application/json',
+			return this.helpers.httpRequestWithAuthentication.call(
+				this,
+				'netXmsApi',
+				{
+					method,
+					url: `${serverUrl}${path}`,
+					headers: {
+						Accept: 'application/json',
+						'Content-Type': 'application/json',
+					},
+					body,
+					qs: qs && Object.keys(qs).length ? qs : undefined,
+					json: true,
 				},
-				body,
-				qs: qs && Object.keys(qs).length ? qs : undefined,
-				json: true,
-			});
+				{ credentialsDecrypted: authenticatedCredentials },
+			);
 		};
 
 		for (let i = 0; i < items.length; i++) {

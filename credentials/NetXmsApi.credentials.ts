@@ -1,4 +1,9 @@
-import type { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
+import type {
+	IAuthenticate,
+	ICredentialTestRequest,
+	ICredentialType,
+	INodeProperties,
+} from 'n8n-workflow';
 
 export class NetXmsApi implements ICredentialType {
 	name = 'netXmsApi';
@@ -33,17 +38,30 @@ export class NetXmsApi implements ICredentialType {
 		},
 	];
 
+	authenticate: IAuthenticate = async (credentials, requestOptions) => {
+		const sessionToken = credentials.sessionToken as string | undefined;
+		if (sessionToken) {
+			requestOptions.headers = {
+				...requestOptions.headers,
+				Authorization: `Bearer ${sessionToken}`,
+			};
+		}
+
+		return requestOptions;
+	};
+
 	test: ICredentialTestRequest = {
 		request: {
 			method: 'POST',
 			baseURL: '={{$credentials.serverUrl}}',
 			url: '/v1/login',
 			body: {
-				login: '={{$credentials.username}}',
+				username: '={{$credentials.username}}',
 				password: '={{$credentials.password}}',
 			},
 			headers: {
 				'Content-Type': 'application/json',
+				Accept: 'application/json',
 			},
 		},
 	};
